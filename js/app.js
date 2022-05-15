@@ -32,7 +32,16 @@ function enviarFormularioCadastro(event) {
         }),
         body: JSON.stringify({
             nomeCompleto: document.getElementById("cadastroNomeCompleto").value,
-            sexo: document.querySelector("[name=cadastroSexo]:checked").value
+            dataNascimento: document.getElementById("cadastroDataNascimento").value, 
+            sexo: document.querySelector("[name=cadastroSexo]:checked").value,
+            cep: document.getElementById("cadastroCep").value.replaceAll("-", ""), 
+            cpf: document.getElementById("cadastroCpf").value.replaceAll("-", "").replaceAll(".", ""), 
+            uf: document.getElementById("cadastroUf").value, 
+            cidade: document.getElementById("cadastroCidade").value, 
+            logradouro: document.getElementById("cadastroLogradouro").value, 
+            numeroLogradouro: document.getElementById("cadastroNumeroLogradouro").value, 
+            email: document.getElementById("cadastroEmail").value, 
+            expectativa: document.getElementById("cadastroExpectativa").value
         })
     })
     .then(response => {
@@ -49,8 +58,21 @@ function enviarFormularioCadastro(event) {
                 const texto = obj[1][0];
                 criarDivDeCampoInvalido(id, texto, index == 0);
             })
-        } else {
-            alert("Ocorreu um erro não tratado");
+        }else if(response && response.status >= 400 && response.status <= 599){
+            if(response.json.message){
+                alert(response.json.message);
+            }else{
+                alert("Ocorreu um erro não tratado");
+            }   
+        }else if(response && response.status === 201){
+            if(response.json.message){
+                alert(response.json.message);
+            }else{
+                alert("Cadastro realizado com sucesso!");
+            }
+
+            formCadastro.reset();
+            $("#cadastroDeAcordo").change();
         }
     }).catch(err => {
         alert("Ocorreu um erro não tratado");
@@ -98,7 +120,20 @@ function criarOption(valor, texto) {
 
 /* PREENCHER ENDEREÇO */
 function popularEnderecoCadastro(){
-    alert("Requer implementação...");
+   fetch("https://app.professordaniloalves.com.br/api/v1/endereco/" + $("#cadastroCep").val(), {
+        headers: new Headers({
+            Accept: "application/json"
+        })
+    })
+   .then(response => {
+       return response.json();
+   }).then( endereco => {
+        $("#cadastroLogradouro").val(endereco.logradouro),
+        $("#cadastroCidade").val(endereco.localidade),
+        $("#cadastroUf").val(endereco.uf)
+   }).catch(err => {
+       console.log(err);
+   })
 }
 /* FIM PREENCHER ENDEREÇO */
 
