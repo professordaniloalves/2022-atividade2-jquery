@@ -8,12 +8,55 @@ $('.scrollSuave').click(() => {
 
 
 /* ENVIAR CADASTRO */
+
+
+$("#cadastroDeAcordo").change(function(){
+    $("#btnSubmitCadastro").attr("disabled", !this.checked);
+});
+
+
 const formularioCadastro = document.getElementById("formCadastro");
 formularioCadastro.addEventListener("submit", enviarFormularioCadastro, true);
 
 function enviarFormularioCadastro(event) {
     event.preventDefault();
-    alert("Requer implementação...");
+
+    $("#formCadastro .invalid-feedback").remove();
+    $("#formCadastro .is-invalid").removeClass("is-invalid");
+
+    fetch(URL_API + "/api/v1/cadastro", {
+        method: "POST",
+        headers: new Headers({
+            Accept: "application/json",
+            'Content-Type': "application/json",
+        }),
+        body: JSON.stringify({
+            nomeCompleto: document.getElementById("cadastroNomeCompleto").value,
+            sexo: document.querySelector("[name=cadastroSexo]:checked").value
+        })
+    })
+    .then(response => {
+        return new Promise((myResolve, myReject) => {
+            response.json().then(json => {
+                myResolve({ "status": response.status, json });
+            });
+        });
+    }).then(response => {
+        if (response && response.status === 422 && response.json.errors) {
+            Object.entries(response.json.errors).forEach((obj, index) => {
+                const field = obj[0];
+                const id = "cadastro" + field.charAt(0).toUpperCase() + field.substring(1);
+                const texto = obj[1][0];
+                criarDivDeCampoInvalido(id, texto, index == 0);
+            })
+        } else {
+            alert("Ocorreu um erro não tratado");
+        }
+    }).catch(err => {
+        alert("Ocorreu um erro não tratado");
+        console.log(err);
+    });
+
 }
 
 /* FIM ENVIAR CADASTRO */
@@ -106,7 +149,9 @@ function parseIdImc(id) {
     return id + "Imc";
 }
 
-function criarDivImcDeCampoInvalido(idItem, textoErro, isFocarNoCampo) {
+/* FIM IMC */
+
+function criarDivDeCampoInvalido(idItem, textoErro, isFocarNoCampo) {
     const el = document.getElementById(idItem);
     isFocarNoCampo && el.focus();
     el.classList.add("is-invalid");
@@ -116,5 +161,3 @@ function criarDivImcDeCampoInvalido(idItem, textoErro, isFocarNoCampo) {
     const elDiv = el.parentElement.appendChild(node);
     elDiv.classList.add("invalid-feedback");
 }
-
-/* FIM IMC */
